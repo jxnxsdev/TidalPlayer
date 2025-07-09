@@ -12,7 +12,14 @@ public:
     {
         Stopped,
         Paused,
-        Active
+        Active,
+        Completed
+    };
+
+    enum class DeviceMode
+    {
+        Shared,
+        Exclusive
     };
     
     std::string encryptionKey;
@@ -26,6 +33,8 @@ public:
     float preloadedStreamDuration = 0.0f;
 
     State state = State::Stopped;
+    DeviceMode deviceMode = DeviceMode::Shared;
+    std::string deviceId;
     int volume = 1;
     float progress = 0.0f;
 
@@ -51,6 +60,8 @@ public:
 
     void preloadMedia(std::string const &url, std::string const &encryptionKey,
                       std::string const &streamFormat);
+
+    void transitionNextSong();
     
 private:
     void sendProgressUpdate();

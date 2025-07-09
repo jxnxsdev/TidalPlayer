@@ -1,0 +1,3 @@
+[submodule "TidalPlayer/JUCE"]
+	path = TidalPlayer/JUCE
+	url = https://github.com/juce-framework/JUCE.git

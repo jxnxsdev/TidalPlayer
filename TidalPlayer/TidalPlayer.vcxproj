@@ -127,7 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="SignalHandler.cpp" />
     <ClCompile Include="TidalPlayer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="includes\json.hpp" />
+    <ClInclude Include="SignalHandler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

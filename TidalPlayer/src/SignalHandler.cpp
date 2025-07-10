@@ -1,6 +1,6 @@
 ﻿#include "SignalHandler.h"
 #include <iostream>
-#include "includes/json.hpp"
+#include "json.hpp"
 
 enum class CommandType {
     DevicesList,

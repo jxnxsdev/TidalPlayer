@@ -9,5 +9,5 @@ public:
     void sendResponseSignal(const std::string& signal);
 
 private:
-    int signalCount;
+    int signalCount = 45;
 };

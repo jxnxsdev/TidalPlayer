@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "SignalSender.h"
-#include "includes/json.hpp"
+#include "json.hpp"
 
 #include <string>
 

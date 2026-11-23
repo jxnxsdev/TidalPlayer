@@ -33,7 +33,9 @@ while (( index < ${#queue[@]} )); do
         ;;
     esac
     if [[ ! -f "$resolved" ]]; then
-      resolved="$(find "$brew_prefix" -name "$(basename "$dependency")" -type f -print -quit)"
+      # Homebrew's opt directories expose many dylibs as symlinks. Do not
+      # restrict this search to regular files; cp -L below follows the link.
+      resolved="$(find "$brew_prefix" -name "$(basename "$dependency")" -print -quit)"
     fi
     if [[ -z "$resolved" || ! -f "$resolved" ]]; then
       echo "Could not resolve MPV dependency: $dependency" >&2

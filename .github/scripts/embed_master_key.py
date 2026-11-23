@@ -51,6 +51,7 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(
         "// Generated during the build; do not commit.\n"
+        "#nullable enable\n"
         "namespace TidalMpvPlayer;\n"
         "internal static class BuildMasterKey\n{\n"
         f"    private static readonly byte[] Data = [{csharp_bytes(obfuscated)}];\n"

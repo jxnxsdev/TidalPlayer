@@ -15,6 +15,9 @@ while (( index < ${#queue[@]} )); do
 
   while IFS='|' read -r name path; do
     [[ -z "$path" ]] && continue
+    # ldd can report the ELF interpreter as an absolute path instead of a
+    # soname. Normalize before filtering or constructing the bundle path.
+    name="${name##*/}"
     case "$name" in
       linux-vdso*|libc.so*|libm.so*|libpthread.so*|libdl.so*|librt.so*|libresolv.so*|libnss*|ld-linux*)
         continue

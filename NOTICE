@@ -1,0 +1,6 @@
+TidalMpvPlayer
+Copyright 2026 TidalMpvPlayer contributors
+
+This project includes MPV and FFmpeg runtime components in release builds.
+Those components are distributed under their own licenses; see
+THIRD-PARTY-NOTICES.md and the licenses supplied with each MPV distribution.

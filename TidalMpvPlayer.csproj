@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+    <PublishSingleFile>true</PublishSingleFile>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>TidalPlayer</AssemblyName>
+    <AssemblyTitle>Tidal MPV Player</AssemblyTitle>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="mpv-runtime.zip" Condition="Exists('mpv-runtime.zip')" />
+  </ItemGroup>
+
+  <Target Name="GenerateObfuscatedMasterKey" BeforeTargets="CoreCompile">
+    <MakeDir Directories="$(IntermediateOutputPath)generated" />
+    <Exec Command="python &quot;$(MSBuildProjectDirectory)/.github/scripts/embed_master_key.py&quot; &quot;$(MSBuildProjectDirectory)/.env&quot; &quot;$(IntermediateOutputPath)generated/BuildMasterKey.g.cs&quot;" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)generated/BuildMasterKey.g.cs" />
+    </ItemGroup>
+  </Target>
+
+</Project>

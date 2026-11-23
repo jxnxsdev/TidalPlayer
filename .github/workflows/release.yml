@@ -1,0 +1,125 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.rid }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            runner: windows-latest
+          - rid: linux-x64
+            runner: ubuntu-24.04
+          - rid: osx-x64
+            runner: macos-15-intel
+          - rid: osx-arm64
+            runner: macos-15
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Download MPV runtime (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install mpv.install --yes --no-progress --force
+          $mpv = Get-ChildItem "$env:ChocolateyInstall\lib\mpv.install" -Filter mpv.exe -Recurse |
+            Select-Object -First 1
+          if ($null -eq $mpv) { throw "The MPV package did not install mpv.exe" }
+          & $mpv.FullName --version | Set-Content -Encoding utf8 MPV-BUILD-INFO.txt
+          Compress-Archive -Path (Join-Path $mpv.Directory.FullName '*') `
+            -DestinationPath mpv-runtime.zip -CompressionLevel Optimal
+
+      - name: Download MPV runtime (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --reinstall mpv patchelf zip
+          bash .github/scripts/package-mpv-linux.sh
+
+      - name: Download MPV runtime (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew reinstall --force-bottle mpv
+          bash .github/scripts/package-mpv-macos.sh
+
+      - name: Publish self-contained executable
+        shell: bash
+        env:
+          TIDAL_OLD_AES_MASTER_KEY: ${{ secrets.TIDAL_OLD_AES_MASTER_KEY }}
+        run: |
+          test -s mpv-runtime.zip
+          dotnet publish TidalMpvPlayer.csproj \
+            --configuration Release \
+            --runtime '${{ matrix.rid }}' \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:EnableCompressionInSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            --output publish
+
+      - name: Package release files (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force package | Out-Null
+          Copy-Item publish\TidalPlayer.exe package\
+          Copy-Item LICENSE, NOTICE, README.md, THIRD-PARTY-NOTICES.md, MPV-BUILD-INFO.txt package\
+          Copy-Item licenses package\licenses -Recurse
+          Compress-Archive -Path package\* `
+            -DestinationPath "TidalPlayer-${{ matrix.rid }}.zip" -CompressionLevel Optimal
+
+      - name: Package release files (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          chmod +x publish/TidalPlayer
+          mkdir package
+          cp publish/TidalPlayer LICENSE NOTICE README.md THIRD-PARTY-NOTICES.md MPV-BUILD-INFO.txt package/
+          cp -R licenses package/licenses
+          (cd package && zip -q -r "../TidalPlayer-${{ matrix.rid }}.zip" .)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TidalPlayer-${{ matrix.rid }}
+          path: TidalPlayer-${{ matrix.rid }}.zip
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: main-${{ github.run_number }}
+          name: Main build ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          make_latest: true
+          files: release-assets/*.zip

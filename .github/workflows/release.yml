@@ -40,7 +40,9 @@ jobs:
         shell: pwsh
         run: |
           choco install mpv.install --yes --no-progress --force
-          $mpv = Get-ChildItem "$env:ChocolateyInstall\lib\mpv.install" -Filter mpv.exe -Recurse |
+          # mpv.install is a meta-package; the executable is deployed by its
+          # mpvio.install dependency under a separate Chocolatey lib folder.
+          $mpv = Get-ChildItem "$env:ChocolateyInstall\lib" -Filter mpv.exe -Recurse |
             Select-Object -First 1
           if ($null -eq $mpv) { throw "The MPV package did not install mpv.exe" }
           & $mpv.FullName --version | Set-Content -Encoding utf8 MPV-BUILD-INFO.txt

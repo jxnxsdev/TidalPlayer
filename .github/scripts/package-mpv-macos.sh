@@ -24,6 +24,14 @@ while (( index < ${#queue[@]} )); do
     esac
 
     resolved="$dependency"
+    case "$dependency" in
+      @loader_path/*)
+        resolved="$(dirname "$current")/${dependency#@loader_path/}"
+        ;;
+      @executable_path/*)
+        resolved="$bundle/${dependency#@executable_path/}"
+        ;;
+    esac
     if [[ ! -f "$resolved" ]]; then
       resolved="$(find "$brew_prefix" -name "$(basename "$dependency")" -type f -print -quit)"
     fi
